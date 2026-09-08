@@ -1,134 +1,50 @@
-# Auth0 FastAPI Lab
+# Auth0 IAM and API Security Lab
 
-A security-focused Python API demonstrating authentication and permission-based authorization using FastAPI and Auth0.
+A two-part identity and access management lab demonstrating automated role assignment and permission-protected API access with Auth0.
 
-## Project Overview
+## Project progression
 
-This project demonstrates how a FastAPI application can validate Auth0 JSON Web Tokens (JWTs) and protect API endpoints.
+### Part 1 — Automatic default role assignment
 
-The application includes:
+An Auth0 Post Login Action checks whether a user already has a role. If not, it uses the Auth0 Management API to assign a configured default role.
 
-- A public endpoint accessible without authentication
-- A protected endpoint requiring a valid Auth0 access token
-- RS256 JWT signature validation using Auth0's JWKS endpoint
-- Issuer and audience validation
-- Permission-based authorization using `read:protected`
-- Secure environment-variable management
+[View Part 1](part-01-default-role-action/README.md)
 
-## Authentication Flow
+### Part 2 — Protecting a FastAPI API
 
-1. A client requests an access token from Auth0.
-2. Auth0 issues an RS256-signed JWT for this API.
-3. The client sends the token using the `Authorization: Bearer <token>` header.
-4. FastAPI obtains Auth0's public signing key from its JWKS endpoint.
-5. FastAPI validates the token's signature, issuer, audience and expiration.
-6. The protected endpoint checks for the `read:protected` permission.
-7. Access is granted or denied.
+A Python FastAPI application validates Auth0 RS256 access tokens and enforces the `read:protected` permission on a protected endpoint.
 
-## API Endpoints
+[View Part 2](part-02-fastapi-api/README.md)
 
-| Method | Endpoint | Access |
-|---|---|---|
-| GET | `/` | Public health check |
-| GET | `/api/public` | Public |
-| GET | `/api/protected` | Valid token and `read:protected` permission required |
-| GET | `/docs` | Swagger UI documentation |
+## Security controls demonstrated
 
-## Technologies
+- OAuth 2.0 bearer-token authorization
+- RS256 JWT validation through Auth0 JWKS
+- Issuer, audience and expiration validation
+- Permission-based API access
+- Least-privilege Management API permissions
+- Secure environment-variable handling
+- Secrets and access tokens excluded from Git
 
-- Python
-- FastAPI
-- Auth0
-- PyJWT
-- OAuth 2.0
-- JSON Web Tokens
-- RS256 asymmetric signing
-- Swagger UI
-
-## Local Setup
-
-### 1. Clone the repository
-
-```bash
-git clone <your-repository-url>
-cd Auth0-FastAPI-Lab
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-### 3. Activate it on Windows
-
-```cmd
-.venv\Scripts\activate
-```
-
-### 4. Install the dependencies
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 5. Configure the environment
-
-Copy `.env.example` to `.env`:
-
-```cmd
-copy .env.example .env
-```
-
-Update `.env` with your Auth0 API settings:
-
-```env
-AUTH0_DOMAIN=your-auth0-domain.auth0.com
-AUTH0_AUDIENCE=https://auth0-fastapi-lab-api
-AUTH0_ALGORITHMS=RS256
-```
-
-Do not add client secrets or access tokens to this file.
-
-### 6. Start the development server
-
-```bash
-fastapi dev main.py
-```
-
-Open the interactive documentation:
+## Repository structure
 
 ```text
-http://127.0.0.1:8000/docs
+.
+├── part-01-default-role-action/
+│   ├── action.js
+│   ├── README.md
+│   └── evidence/
+├── part-02-fastapi-api/
+│   ├── auth.py
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── README.md
+├── .gitignore
+└── README.md
 ```
 
-## Expected Security Responses
+## Security notice
 
-| Status | Meaning |
-|---|---|
-| `200 OK` | Authentication and authorization succeeded |
-| `401 Unauthorized` | No token, invalid token or expired token |
-| `403 Forbidden` | Valid token without the required permission |
+Never commit `.env` files, client secrets, passwords or bearer tokens. Evidence should be reviewed and redacted before publication.
 
-## Security Practices Demonstrated
-
-- Secrets and local environment files are excluded from Git
-- Tokens are verified using Auth0 public signing keys
-- The expected token issuer and audience are validated
-- Expired and invalid tokens are rejected
-- Permissions are checked before protected resources are returned
-- No client secret is stored in the application source code
-
-## Important Security Notice
-
-Never commit any of the following:
-
-- `.env`
-- Client secrets
-- Access tokens
-- Screenshots containing bearer tokens
-- Private credentials
-
-## Disclaimer
-
-This project is an educational IAM and API-security lab. It is not a production-ready authentication platform.
