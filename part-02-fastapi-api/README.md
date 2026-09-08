@@ -1,86 +1,67 @@
-# Auth0 FastAPI Lab
+# Part 2 — Protecting a FastAPI API with Auth0
 
 A security-focused Python API demonstrating authentication and permission-based authorization using FastAPI and Auth0.
 
-## Project Overview
-
-This project demonstrates how a FastAPI application can validate Auth0 JSON Web Tokens (JWTs) and protect API endpoints.
-
-The application includes:
+## What this part demonstrates
 
 - A public endpoint accessible without authentication
 - A protected endpoint requiring a valid Auth0 access token
-- RS256 JWT signature validation using Auth0's JWKS endpoint
-- Issuer and audience validation
+- RS256 JWT signature validation through Auth0's JWKS endpoint
+- Issuer, audience and expiration validation
 - Permission-based authorization using `read:protected`
 - Secure environment-variable management
 
-## Authentication Flow
+## Authentication and authorization flow
 
 1. A client requests an access token from Auth0.
 2. Auth0 issues an RS256-signed JWT for this API.
 3. The client sends the token using the `Authorization: Bearer <token>` header.
-4. FastAPI obtains Auth0's public signing key from its JWKS endpoint.
-5. FastAPI validates the token's signature, issuer, audience and expiration.
+4. FastAPI obtains Auth0's public signing key from the JWKS endpoint.
+5. FastAPI validates the signature, issuer, audience and expiration.
 6. The protected endpoint checks for the `read:protected` permission.
-7. Access is granted or denied.
+7. Access is granted with `200`, rejected without authentication with `401`, or rejected without permission with `403`.
 
-## API Endpoints
+## API endpoints
 
 | Method | Endpoint | Access |
 |---|---|---|
 | GET | `/` | Public health check |
 | GET | `/api/public` | Public |
-| GET | `/api/protected` | Valid token and `read:protected` permission required |
+| GET | `/api/protected` | Valid token with `read:protected` |
 | GET | `/docs` | Swagger UI documentation |
 
-## Technologies
+## Evidence
 
-- Python
-- FastAPI
-- Auth0
-- PyJWT
-- OAuth 2.0
-- JSON Web Tokens
-- RS256 asymmetric signing
-- Swagger UI
+All sensitive bearer tokens and identifiers shown in the authorization tests have been redacted.
 
-## Local Setup
+| API setup | Permission configuration |
+|---|---|
+| ![FastAPI Swagger overview](evidence/01-fastapi-swagger-overview.png) | ![Auth0 API created](evidence/02-auth0-api-created.png) |
+| ![read protected permission](evidence/03-read-protected-permission.png) | ![Unauthenticated request returns 401](evidence/04-unauthenticated-request-401.png) |
 
-### 1. Clone the repository
+| Authorization denied | Authorization granted |
+|---|---|
+| ![Valid token without permission returns 403](evidence/05-missing-permission-403-redacted.png) | ![Authorized request returns 200](evidence/06-authorized-request-200-redacted.png) |
 
-```bash
-git clone <your-repository-url>
-cd Auth0-FastAPI-Lab
-```
-
-### 2. Create a virtual environment
+## Local setup
 
 ```bash
 python -m venv .venv
 ```
 
-### 3. Activate it on Windows
+Activate the environment on Windows:
 
 ```cmd
 .venv\Scripts\activate
 ```
 
-### 4. Install the dependencies
+Install dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-### 5. Configure the environment
-
-Copy `.env.example` to `.env`:
-
-```cmd
-copy .env.example .env
-```
-
-Update `.env` with your Auth0 API settings:
+Copy `.env.example` to `.env`, then configure your Auth0 domain and API audience:
 
 ```env
 AUTH0_DOMAIN=your-auth0-domain.auth0.com
@@ -88,47 +69,15 @@ AUTH0_AUDIENCE=https://auth0-fastapi-lab-api
 AUTH0_ALGORITHMS=RS256
 ```
 
-Do not add client secrets or access tokens to this file.
-
-### 6. Start the development server
+Run the application:
 
 ```bash
 fastapi dev main.py
 ```
 
-Open the interactive documentation:
+Open `http://127.0.0.1:8000/docs`.
 
-```text
-http://127.0.0.1:8000/docs
-```
+## Security notice
 
-## Expected Security Responses
+Never commit `.env`, client secrets, access tokens, passwords, or unredacted authentication screenshots.
 
-| Status | Meaning |
-|---|---|
-| `200 OK` | Authentication and authorization succeeded |
-| `401 Unauthorized` | No token, invalid token or expired token |
-| `403 Forbidden` | Valid token without the required permission |
-
-## Security Practices Demonstrated
-
-- Secrets and local environment files are excluded from Git
-- Tokens are verified using Auth0 public signing keys
-- The expected token issuer and audience are validated
-- Expired and invalid tokens are rejected
-- Permissions are checked before protected resources are returned
-- No client secret is stored in the application source code
-
-## Important Security Notice
-
-Never commit any of the following:
-
-- `.env`
-- Client secrets
-- Access tokens
-- Screenshots containing bearer tokens
-- Private credentials
-
-## Disclaimer
-
-This project is an educational IAM and API-security lab. It is not a production-ready authentication platform.
