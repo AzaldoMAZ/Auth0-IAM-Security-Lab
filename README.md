@@ -56,3 +56,10 @@ A React single-page application now authenticates human users through Auth0 Univ
 
 [View Part 3](part-03-react-auth0-client/README.md)
 
+
+
+## Part 4 - Step-up MFA for sensitive API access
+
+Part 4 extends the React and FastAPI integration with step-up OTP MFA. Normal tokens can access the standard protected endpoint, while the sensitive endpoint requires the `read:sensitive` permission and a namespaced MFA proof claim issued during an MFA-requested authorization flow.
+
+Errors, ordinary permission checks, and successful post-MFA access are documented with 15 ordered, redacted screenshots in `part-04-step-up-mfa/evidence`.

@@ -16,7 +16,7 @@ createRoot(document.getElementById("root")).render(
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience,
-        scope: "openid profile email read:protected",
+        scope: "openid profile email read:protected read:sensitive",
       }}
       cacheLocation="memory"
     >
