@@ -1,0 +1,153 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.card {
+  width: min(680px, 100%);
+  padding: 48px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #22d3ee;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+h1 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+}
+
+.description {
+  margin: 20px 0 32px;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 28px 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.profile img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+}
+
+.profile span {
+  display: block;
+  margin-bottom: 4px;
+  color: #22d3ee;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 1.1rem;
+}
+
+.profile p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+button {
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.primary {
+  color: #082f49;
+  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+}
+
+.secondary {
+  color: #e2e8f0;
+  background: #334155;
+}
+
+.result {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 14px;
+}
+
+.result h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.result pre {
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.success {
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #a7f3d0;
+  background: rgba(6, 78, 59, 0.35);
+}
+
+.error {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 28px 22px;
+  }
+}

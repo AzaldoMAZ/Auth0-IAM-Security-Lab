@@ -48,3 +48,11 @@ A Python FastAPI application validates Auth0 RS256 access tokens and enforces th
 
 Never commit `.env` files, client secrets, passwords or bearer tokens. Evidence should be reviewed and redacted before publication.
 
+
+
+## Part 3 — JavaScript user login and protected API access
+
+A React single-page application now authenticates human users through Auth0 Universal Login using Authorization Code Flow with PKCE. It requests an access token for the Part 2 FastAPI audience and calls the `read:protected` endpoint with a Bearer token.
+
+[View Part 3](part-03-react-auth0-client/README.md)
+
