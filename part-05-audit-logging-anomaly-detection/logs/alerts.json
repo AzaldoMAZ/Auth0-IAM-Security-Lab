@@ -1,0 +1,65 @@
+[
+  {
+    "technique": "T1110 - Brute Force",
+    "subject": "azaldomazibuko65@gmail.com",
+    "count": 5,
+    "window_start": "2026-09-22T22:19:03.085Z",
+    "window_end": "2026-09-22T22:19:19.659Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Rate-limit / lock account; review source IP reputation."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "actor": "unknown-client",
+    "description": "Create a role",
+    "date": "2026-09-07T04:19:26.348Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "actor": "unknown-client",
+    "description": "Update a role",
+    "date": "2026-09-07T04:19:46.905Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "unknown",
+    "actor": "unknown-client",
+    "description": "Assign roles to a user",
+    "date": "2026-09-07T19:09:56.362Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "actor": "unknown-client",
+    "description": "Associate permissions with a role",
+    "date": "2026-09-10T14:34:43.339Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "unknown",
+    "actor": "unknown-client",
+    "description": "Assign roles to a user",
+    "date": "2026-09-10T15:44:33.317Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  },
+  {
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "actor": "unknown-client",
+    "description": "Associate permissions with a role",
+    "date": "2026-09-10T16:41:02.280Z",
+    "nist_phase": "Detection & Analysis",
+    "recommended_action": "Confirm change against change-management record; revert if unauthorized."
+  }
+]
