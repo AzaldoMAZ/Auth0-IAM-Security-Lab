@@ -1,0 +1,72 @@
+[
+  {
+    "timestamp": "2026-09-23T19:30:03.333844+00:00",
+    "technique": "T1110 - Brute Force",
+    "subject": "azaldomazibuko65@gmail.com",
+    "alert_time_marker": "2026-09-22T22:19:19.659Z",
+    "action_taken": "Blocked user google-oauth2|110548029684766797673 (azaldomazibuko65@gmail.com)",
+    "nist_phase": "Containment",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338009+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "alert_time_marker": "2026-09-07T04:19:26.348Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338061+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "alert_time_marker": "2026-09-07T04:19:46.905Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338096+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "unknown",
+    "alert_time_marker": "2026-09-07T19:09:56.362Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338130+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "alert_time_marker": "2026-09-10T14:34:43.339Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338224+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "unknown",
+    "alert_time_marker": "2026-09-10T15:44:33.317Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  },
+  {
+    "timestamp": "2026-09-23T19:30:03.338328+00:00",
+    "technique": "T1098 - Account Manipulation",
+    "subject": "google-oauth2|110548029684766797673",
+    "alert_time_marker": "2026-09-10T16:41:02.280Z",
+    "action_taken": "Alert only - manual review required",
+    "nist_phase": "Detection & Analysis",
+    "webhook_sent": false,
+    "dry_run": false
+  }
+]
