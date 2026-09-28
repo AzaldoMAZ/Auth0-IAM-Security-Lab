@@ -197,8 +197,4 @@ A live brute-force attempt against the Part 3 login client was used to verify th
 4. [Auth0 Dashboard confirming the account was blocked](evidence/01-user-blocked-dashboard.png)
 5. [Resulting "account has been blocked" message on next login attempt](evidence/02-login-blocked-message.png)
 
-Email addresses, client IDs, and client secrets are redacted from all published evidence.
 
-## Security notice
-
-Never commit `.env`, client secrets, or unredacted `logs/response_log.json` — action logs may contain real user emails. `DRY_RUN` defaults to `true`; disabling it enables a real, live account block against the configured Auth0 tenant. Review every containment action logged before assuming it was appropriate — automation flags findings for response, it does not replace human judgment on ambiguous ones.
