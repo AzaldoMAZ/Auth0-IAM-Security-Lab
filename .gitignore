@@ -19,3 +19,7 @@ __pycache__/
 # Operating-system files
 .DS_Store
 Thumbs.db
+# Raw logs and response logs contain real user data - never commit
+part-05-audit-logging-anomaly-detection/logs/*.json
+part-06-automated-incident-response/logs/*.json
+part-07-incident-reporting/reports/*.md
