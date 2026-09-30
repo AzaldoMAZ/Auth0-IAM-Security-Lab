@@ -37,8 +37,10 @@ PATTERNS = [
     (
         "Non-empty secret/token/key assignment",
         re.compile(
-            r"^\s*(?:[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|API_KEY)[A-Z0-9_]*)\s*[:=]\s*"
-            r"[\"']?([^\s\"'#]{12,})[\"']?\s*$",
+            r"^\s*[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|API_KEY)[A-Z0-9_]*\s*[:=]\s*"
+            r"[\"']([A-Za-z0-9+/_\-\.]{16,})[\"']\s*[,;]?\s*$"
+            r"|"
+            r"^[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|API_KEY)[A-Z0-9_]*=([A-Za-z0-9+/_\-\.]{16,})\s*$",
             re.IGNORECASE | re.MULTILINE,
         ),
     ),
@@ -96,7 +98,15 @@ def scan_file(path: Path) -> list[tuple[int, str, str]]:
             match = pattern.search(line)
             if not match:
                 continue
-            value = match.group(1) if match.groups() else match.group(0)
+            value = None
+            if match.groups():
+                # Pick whichever alternation group actually captured.
+                for group in match.groups():
+                    if group:
+                        value = group
+                        break
+            if value is None:
+                value = match.group(0)
             if PLACEHOLDER_RE.match(value.strip()):
                 continue
             findings.append((line_no, description, mask(value)))
