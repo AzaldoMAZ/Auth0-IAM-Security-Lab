@@ -1,0 +1,49 @@
+name: Security Pipeline
+
+# Runs on every push and pull request against main. This is the
+# server-side counterpart to Part 8's local pre-commit hook: the hook
+# is opt-in per clone and can be bypassed with --no-verify, so this
+# workflow re-runs the same secret scan where it cannot be skipped,
+# and adds an automated permission-logic test suite for Part 2.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  secret-scan:
+    name: Secret and PII scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Scan every tracked file (not just staged changes)
+        run: |
+          git ls-files -z | xargs -0 python part-08-secret-scanning-prevention/scan_secrets.py
+
+  permission-tests:
+    name: Part 2 permission-logic tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r part-02-fastapi-api/requirements.txt
+          pip install pytest
+
+      - name: Run permission tests
+        run: |
+          pytest part-09-ci-security-pipeline/test_auth.py -v
