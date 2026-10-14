@@ -1,6 +1,5 @@
 # Auth0 IAM and API Security Lab
 
-A two-part identity and access management lab demonstrating automated role assignment and permission-protected API access with Auth0.
 
 ## Project progression
 
