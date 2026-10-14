@@ -1,199 +1,230 @@
 # Auth0 IAM and API Security Lab
 
+An end-to-end identity and access management lab built on Auth0, FastAPI and React. It implements least-privilege role assignment, OAuth 2.0 / OIDC authentication, JWT-based API authorization and step-up MFA, then adds the operational layer around them: log-based anomaly detection, automated containment, incident reporting, secret scanning, a CI security pipeline and a compliance controls mapping.
 
-## Project progression
+Each part builds on the previous one and follows the NIST SP 800-61r2 incident response lifecycle.
 
-### Part 1 — Automatic default role assignment
+[![Security Pipeline](https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab/actions/workflows/security-pipeline.yml/badge.svg)](https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab/actions/workflows/security-pipeline.yml)
 
-An Auth0 Post Login Action checks whether a user already has a role. If not, it uses the Auth0 Management API to assign a configured default role.
+---
 
-[View Part 1](part-01-default-role-action/README.md)
+## Contents
 
-### Part 2 — Protecting a FastAPI API
+- [Lab overview](#lab-overview)
+- [Architecture](#architecture)
+- [Technology stack](#technology-stack)
+- [Security controls](#security-controls)
+- [Detection and response](#detection-and-response)
+- [CI security pipeline](#ci-security-pipeline)
+- [Compliance mapping](#compliance-mapping)
+- [Repository structure](#repository-structure)
+- [Getting started](#getting-started)
+- [Scope and limitations](#scope-and-limitations)
+- [Security notice](#security-notice)
 
-A Python FastAPI application validates Auth0 RS256 access tokens and enforces the `read:protected` permission on a protected endpoint.
+---
 
-[View Part 2](part-02-fastapi-api/README.md)
+## Lab overview
 
-## Security controls demonstrated
+| Part | Component | What it implements | IR lifecycle phase |
+|---|---|---|---|
+| [1](part-01-default-role-action/README.md) | Default role assignment | Post Login Action assigns a default role via the Management API (M2M app scoped to `read:roles`, `update:users`) | Preparation |
+| [2](part-02-fastapi-api/README.md) | Protected FastAPI API | RS256 JWT validation via JWKS; issuer, audience and expiry checks; permission enforcement (`read:protected`) | Preparation |
+| [3](part-03-react-auth0-client/README.md) | React SPA client | Universal Login with Authorization Code Flow + PKCE; Bearer token calls to the API | Preparation |
+| [4](part-04-step-up-mfa/README.md) | Step-up MFA | `acr_values`-triggered OTP MFA; namespaced MFA claim required for `read:sensitive` | Preparation |
+| [5](part-05-audit-logging-anomaly-detection/README.md) | Audit logging and detection | Pulls tenant logs from `/api/v2/logs`; four detections mapped to MITRE ATT&CK | Detection and Analysis |
+| [6](part-06-automated-incident-response/README.md) | Automated incident response | Blocks brute-forced accounts via the Management API; other findings routed to manual review | Containment |
+| [7](part-07-incident-reporting/README.md) | Incident reporting | Correlates findings and response actions into a Markdown report with automatic PII masking | Post-Incident Activity |
+| [8](part-08-secret-scanning-prevention/README.md) | Secret scanning | Git pre-commit hook blocking tokens, keys and PII before they are committed | Preparation (lessons learned) |
+| [9](part-09-ci-security-pipeline/README.md) | CI security pipeline | GitHub Actions: repository-wide secret scan and pytest suite for authorization logic | Preparation |
+| [10](part-10-compliance-mapping/README.md) | Compliance mapping | Controls crosswalked to NIST CSF 2.0, ISO/IEC 27001:2022 Annex A and CIS Controls v8 | Governance |
 
-- OAuth 2.0 bearer-token authorization
-- RS256 JWT validation through Auth0 JWKS
-- Issuer, audience and expiration validation
-- Permission-based API access
-- Least-privilege Management API permissions
-- Secure environment-variable handling
-- Secrets and access tokens excluded from Git
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U[User] -->|Universal Login<br/>Auth Code + PKCE| SPA[React SPA<br/>Part 3]
+    SPA -->|Bearer access token| API[FastAPI<br/>Parts 2 and 4]
+    SPA <-->|OIDC / OAuth 2.0| A0[(Auth0 tenant)]
+    A0 -->|Post Login Actions<br/>default role, step-up MFA| A0
+    API -->|JWKS public keys| A0
+
+    A0 -->|/api/v2/logs| DET[fetch_logs.py<br/>detect_anomalies.py<br/>Part 5]
+    DET -->|alerts.json| RESP[respond.py<br/>Part 6]
+    RESP -->|PATCH /api/v2/users| A0
+    DET --> REP[generate_report.py<br/>Part 7]
+    RESP -->|response_log.json| REP
+    REP --> MD[Incident report<br/>PII masked]
+
+    DEV[Developer commit] --> HOOK[Pre-commit secret scan<br/>Part 8]
+    HOOK --> CI[GitHub Actions<br/>Part 9]
+```
+
+**Request path (Parts 1–4):** the SPA authenticates the user through Auth0 and requests an access token for the API audience. FastAPI verifies the RS256 signature against Auth0's JWKS endpoint, validates `iss`, `aud` and `exp`, then checks the required permission. The sensitive endpoint also requires the `https://auth0-fastapi-lab/mfa` claim, which a Post Login Action adds only after OTP MFA succeeds.
+
+**Operations path (Parts 5–7):** a Machine-to-Machine client pulls tenant logs, the detection engine writes findings to `alerts.json`, the responder acts on them and logs every decision, and the report generator correlates both outputs into a single incident report.
+
+---
+
+## Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Identity provider | Auth0 (Universal Login, Actions, RBAC, Management API, Guardian OTP) |
+| API | Python, FastAPI, PyJWT / JWKS validation |
+| Client | React, Vite, Auth0 React SDK |
+| Automation | Python (`requests`, standard library), Auth0 Node.js SDK in Actions |
+| CI/CD | GitHub Actions, pytest |
+| Frameworks | MITRE ATT&CK, NIST SP 800-61r2, NIST CSF 2.0, ISO/IEC 27001:2022, CIS Controls v8 |
+
+---
+
+## Security controls
+
+**Authentication**
+- OAuth 2.0 Authorization Code Flow with PKCE for the browser client
+- OIDC user identity via Auth0 Universal Login
+- Step-up OTP MFA requested through `acr_values`, with `allowRememberBrowser: false`
+
+**Authorization**
+- RS256 JWT verification using Auth0's JWKS endpoint
+- Issuer, audience and expiration validation on every request
+- Permission-based access per endpoint (`read:protected`, `read:sensitive`)
+- Server-side enforcement of a namespaced MFA proof claim
+- Explicit `401` (unauthenticated) and `403` (insufficient permission or missing MFA) responses
+
+**Least privilege**
+- Default role assigned automatically to users without one
+- Each Machine-to-Machine application scoped only to the Management API permissions it needs
+- Per-application API access in the Auth0 dashboard
+
+**Secrets and data protection**
+- Credentials held in environment variables and Action secrets; `.env.example` templates only
+- Raw logs, response logs and generated reports excluded via `.gitignore`
+- Pre-commit and CI secret scanning; matches are printed masked, never in full
+- Automatic PII masking in incident reports
+
+---
+
+## Detection and response
+
+| Detection | MITRE ATT&CK | Trigger | Automated response |
+|---|---|---|---|
+| Repeated failed logins | T1110 Brute Force | ≥ 5 failures for one user within 10 minutes | Account blocked via `PATCH /api/v2/users/{id}` |
+| Impossible travel | T1078 Valid Accounts | Country change between successful logins within 30 minutes | Alert only, manual review |
+| Role or permission change | T1098 Account Manipulation | `sapi` event referencing a role or permission | Alert only, manual review |
+| Failed MFA challenge | T1556.006 MFA Interception | `fmfa` or `gd_recovery_failed` event | Alert only, manual review |
+
+Only brute force is contained automatically: it is high-confidence and cheap to reverse. Impossible travel can be caused by a VPN, and a permission change may be legitimate, so those findings stay with a human.
+
+The responder runs in `DRY_RUN=true` mode by default, is idempotent across repeated runs, and writes every action (or deliberate non-action) to an audit log. The full pipeline was verified end to end against a live brute-force attempt on the Part 3 login client.
+
+---
+
+## CI security pipeline
+
+[`.github/workflows/security-pipeline.yml`](.github/workflows/security-pipeline.yml) runs on every push and pull request to `main`:
+
+| Job | Purpose |
+|---|---|
+| `secret-scan` | Runs the Part 8 scanner against every tracked file (`git ls-files`), catching anything committed with `--no-verify` or without the hook installed |
+| `permission-tests` | Runs `test_auth.py` against Part 2's `require_permission()` with constructed token payloads: granted via `permissions`, granted via `scope`, denied, empty token and unrelated permission |
+
+Either job failing fails the pipeline. The tests need no Auth0 credentials or network access.
+
+---
+
+## Compliance mapping
+
+[Part 10](part-10-compliance-mapping/README.md) maps each implemented control to NIST CSF 2.0, ISO/IEC 27001:2022 Annex A and CIS Controls v8, for example:
+
+| Control | NIST CSF 2.0 | ISO 27001 Annex A | CIS v8 |
+|---|---|---|---|
+| Step-up MFA for sensitive operations | PR.AA-03 | A.8.5 | 6.3, 6.4 |
+| Log analysis and anomaly detection | DE.CM-01, DE.CM-03 | A.8.16 | 8.5, 13.1 |
+| Automated incident containment | RS.MI-01 | A.5.26 | 17.4, 17.9 |
+| Pre-commit secret scanning | PR.DS-01 | A.8.12 | 3.10, 3.11 |
+
+It also includes a gap analysis of areas the lab does not cover.
+
+---
 
 ## Repository structure
 
 ```text
 .
-├── part-01-default-role-action/
-│   ├── action.js
-│   ├── README.md
-│   └── evidence/
-├── part-02-fastapi-api/
-│   ├── auth.py
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── .env.example
-│   └── README.md
-├── .gitignore
-└── README.md
+├── .github/workflows/
+│   └── security-pipeline.yml          # CI: secret scan + permission tests
+├── part-01-default-role-action/       # Post Login Action: default role assignment
+├── part-02-fastapi-api/               # FastAPI resource server, JWT validation
+├── part-03-react-auth0-client/        # React SPA, Auth Code + PKCE
+├── part-04-step-up-mfa/               # Step-up MFA Action and sensitive endpoint
+├── part-05-audit-logging-anomaly-detection/
+│   ├── fetch_logs.py                  # Pulls tenant logs via Management API
+│   └── detect_anomalies.py            # Four ATT&CK-mapped detections
+├── part-06-automated-incident-response/
+│   └── respond.py                     # Containment, alerting, audit log
+├── part-07-incident-reporting/
+│   └── generate_report.py             # Markdown incident report, PII masking
+├── part-08-secret-scanning-prevention/
+│   ├── scan_secrets.py                # Secret and PII scanner
+│   └── install_hook.py                # Installs git pre-commit hook
+├── part-09-ci-security-pipeline/
+│   └── test_auth.py                   # pytest suite for authorization logic
+└── part-10-compliance-mapping/        # NIST CSF, ISO 27001, CIS v8 crosswalk
 ```
 
-## Security notice
+Each part contains its own README with setup steps and an `evidence/` folder of redacted screenshots.
 
-Never commit `.env` files, client secrets, passwords or bearer tokens. Evidence should be reviewed and redacted before publication.
+---
 
+## Getting started
 
+**Prerequisites:** an Auth0 tenant, Python 3.10+, Node.js 18+.
 
-## Part 3 — JavaScript user login and protected API access
+```bash
+git clone https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab.git
+cd Auth0-IAM-Security-Lab
 
-A React single-page application now authenticates human users through Auth0 Universal Login using Authorization Code Flow with PKCE. It requests an access token for the Part 2 FastAPI audience and calls the `read:protected` endpoint with a Bearer token.
+# Install the secret-scanning pre-commit hook
+python part-08-secret-scanning-prevention/install_hook.py
 
-[View Part 3](part-03-react-auth0-client/README.md)
+# API (Part 2)
+cd part-02-fastapi-api
+cp .env.example .env            # add your Auth0 domain and API audience
+pip install -r requirements.txt
+uvicorn main:app --reload
 
+# Client (Part 3), in a second terminal
+cd part-03-react-auth0-client
+cp .env.example .env            # add your SPA client ID and audience
+npm install
+npm run dev
+```
 
+Parts 5–7 run in order (`fetch_logs.py` → `detect_anomalies.py` → `respond.py` → `generate_report.py`) using a Machine-to-Machine application with `read:logs`, `read:logs_users`, `read:users` and `update:users`. See each part's README for its Auth0 configuration.
 
-## Part 4 - Step-up MFA for sensitive API access 
+Run the authorization tests locally:
 
-Part 4 extends the React and FastAPI integration with step-up OTP MFA. Normal tokens can access the standard protected endpoint, while the sensitive endpoint requires the `read:sensitive` permission and a namespaced MFA proof claim issued during an MFA-requested authorization flow.
+```bash
+cd part-02-fastapi-api
+pip install pytest
+pytest ../part-09-ci-security-pipeline/test_auth.py -v
+```
 
-Errors, ordinary permission checks, and successful post-MFA access are documented with 15 ordered, redacted screenshots in `part-04-step-up-mfa/evidence`.
+---
 
-part-05-audit-logging-anomaly-detection/README.md
-markdown
-# Part 5 — Centralized Audit Logging and Anomaly Detection
+## Scope and limitations
 
-Part 5 pulls tenant authentication logs from the Auth0 Management API and runs them through a detection engine that flags patterns associated with credential-based attacks, each mapped to a MITRE ATT&CK technique and a NIST SP 800-61r2 incident-response phase.
+- This is a lab environment, not a production deployment. Controls are implemented but not formally audited.
+- Detections are rule-based with fixed thresholds; there is no baselining or tuning against real traffic volumes.
+- Only brute force is contained automatically by design.
+- Not covered: asset and data inventory, vendor risk assessment of Auth0, backup and recovery, security awareness training and a formal risk register (see the [Part 10 gap analysis](part-10-compliance-mapping/README.md#gap-analysis---what-this-lab-does-not-cover)).
 
-## What this demonstrates
-
-- A Machine-to-Machine application scoped to least-privilege Management API access (`read:logs`, `read:logs_users`)
-- Programmatic retrieval of Auth0 tenant logs via `GET /api/v2/logs`
-- Pattern-based detection across four independent techniques
-- Findings mapped to MITRE ATT&CK technique IDs
-- Findings triaged against the NIST SP 800-61r2 incident-response lifecycle
-- A recommended remediation attached to every finding
-- Secure environment-variable management, consistent with Parts 1–4
-
-## Detections implemented
-
-| Pattern | MITRE ATT&CK | Trigger |
-|---|---|---|
-| Repeated failed logins | T1110 — Brute Force | 5 or more failed logins for one user within a 10-minute window |
-| Login from a new country shortly after another | T1078 — Valid Accounts (impossible travel) | Country changes between two successful logins within 30 minutes |
-| Role or permission change via the Management API | T1098 — Account Manipulation | A `sapi` log event whose description references a role or permission |
-| Failed MFA challenge | T1556.006 — MFA Interception/Bypass | An `fmfa` or `gd_recovery_failed` log event |
-
-## Architecture
-
-1. `fetch_logs.py` authenticates to the Auth0 Management API using a client-credentials grant.
-2. It pages through `GET /api/v2/logs`, sorted oldest to newest, and writes the results to `logs/raw_logs.json`.
-3. `detect_anomalies.py` loads the raw logs and evaluates each of the four detection functions against them.
-4. Each finding is written to `logs/alerts.json` with its MITRE technique, subject, NIST phase, and a recommended action.
-5. A summary of findings is printed to the terminal.
-
-## Local setup
-
-Create a Machine-to-Machine application in the Auth0 Dashboard, authorized for the Management API with `read:logs` and `read:logs_users`.
-
-Copy `.env.example` to `.env`:
-
-AUTH0_DOMAIN=your-auth0-domain.auth0.com
-M2M_CLIENT_ID=your-m2m-client-id
-M2M_CLIENT_SECRET=your-m2m-client-secret
-
-
-Install dependencies and run:
-
-python -m pip install -r requirements.txt
-python fetch_logs.py
-python detect_anomalies.py
-
-
-## Evidence
-
-Redacted screenshots of a real detection run — including a live, deliberately-triggered brute-force test against the Part 3 login client that was correctly captured and flagged — are in `evidence/`.
-
-1. [Detection run — full findings output](evidence/01-detection-run.png)
-
-Email addresses and Auth0 user identifiers are redacted from all published evidence.
+---
 
 ## Security notice
 
-Never commit `.env`, client secrets, or unredacted log exports — `logs/raw_logs.json` and `logs/alerts.json` contain real user emails and identifiers and must never be committed. Both are excluded via `.gitignore`.
-part-06-automated-incident-response/README.md
-markdown
-# Part 6 — Automated Incident Response
-
-Part 6 consumes Part 5's findings directly and acts on them, moving the lab from NIST SP 800-61r2 Detection & Analysis into Containment. High-confidence findings trigger automatic containment; lower-confidence or higher-risk findings are alerted but deliberately left for human review.
-
-## What this demonstrates
-
-- Consuming another component's output (`part-05-audit-logging-anomaly-detection/logs/alerts.json`) as a pipeline input rather than duplicating detection logic
-- Scope-limited Management API automation (`read:users`, `update:users`, in addition to Part 5's `read:logs`, `read:logs_users`)
-- Automated account containment via `PATCH /api/v2/users/{id}`
-- Deliberate non-automation of ambiguous findings, with a stated security rationale
-- A `DRY_RUN` safety switch that simulates every action before real containment is permitted
-- A full audit trail of every action taken, or explicitly not taken
-- Idempotent response handling, so a repeated run does not reprocess an already-handled finding
-
-## Containment policy
-
-| Technique | Response |
-|---|---|
-| T1110 — Brute Force | Automated: user is located by email and blocked via the Management API |
-| T1078 — Valid Accounts (impossible travel) | Alert only — routed to manual review |
-| T1098 — Account Manipulation | Alert only — routed to manual review |
-| T1556.006 — MFA Interception/Bypass | Alert only — routed to manual review |
-
-Only brute force is auto-contained. A brute-force finding is high-confidence and cheap to reverse — the account is unblocked once verified. Impossible travel can be a false positive from a VPN or a new device; a permission change may be entirely legitimate administrative activity. An automated system should not decide those cases alone, so this lab draws that line explicitly rather than automating everything it technically could.
-
-## Architecture
-
-1. `respond.py` loads `../part-05-audit-logging-anomaly-detection/logs/alerts.json`.
-2. Each finding not already present in `logs/response_log.json` is processed.
-3. An optional webhook notification is sent for every finding.
-4. Brute-force findings resolve the subject's email to a `user_id` via `GET /api/v2/users-by-email`, then block the account via `PATCH /api/v2/users/{user_id}`.
-5. All other techniques are logged as "alert only — manual review required."
-6. Every outcome — containment, alert-only, or failure — is appended to `logs/response_log.json` with a timestamp.
-
-## Local setup
-
-Authorize the same Machine-to-Machine application used in Part 5 for two additional Management API scopes: `read:users` and `update:users`.
-
-Copy `.env.example` to `.env`:
-
-AUTH0_DOMAIN=your-auth0-domain.auth0.com
-M2M_CLIENT_ID=your-m2m-client-id
-M2M_CLIENT_SECRET=your-m2m-client-secret
-WEBHOOK_URL=
-DRY_RUN=true
-
-
-Install dependencies and run Part 5 first, so fresh findings exist:
-
-python -m pip install -r requirements.txt
-cd ../part-05-audit-logging-anomaly-detection
-python fetch_logs.py
-python detect_anomalies.py
-cd ../part-06-automated-incident-response
-python respond.py
-
-
-Review the dry-run output and `logs/response_log.json`. Set `DRY_RUN=false` in `.env` only once ready to permit a real containment action, then run again.
-
-## Evidence
-
-A live brute-force attempt against the Part 3 login client was used to verify the full pipeline end-to-end, with `DRY_RUN=false`.
-
-1. [respond.py source](evidence/05-respond-py-code.png)
-2. [.env with DRY_RUN=false, all secrets redacted](evidence/04-env-dry-run-false-redacted.png)
-3. [Terminal output of the response run](evidence/03-respond-py-terminal-output.png)
-4. [Auth0 Dashboard confirming the account was blocked](evidence/01-user-blocked-dashboard.png)
-5. [Resulting "account has been blocked" message on next login attempt](evidence/02-login-blocked-message.png)
-
-
+Never commit `.env` files, client secrets, passwords, bearer tokens or unredacted log exports. Install the pre-commit hook after cloning. All published evidence has been redacted of email addresses, Auth0 user identifiers, tokens and MFA enrollment QR codes.
