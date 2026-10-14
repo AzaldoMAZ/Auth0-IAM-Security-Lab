@@ -42,7 +42,7 @@ python generate_report.py
 
 A generated report from a real detection-and-response cycle (the same live brute-force test used in Parts 5 and 6) is in `evidence/`.
 
-1. [Generated incident report](evidence/01-sample-incident-report.png)
+1. [Generated incident report](evidence/01-sample-incident-report.md)
 
 The report itself has PII masked automatically by the script — no manual redaction was needed for this evidence.
 
