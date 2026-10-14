@@ -50,9 +50,16 @@ forcing step-up MFA, or reverting an unauthorized permission change.
 
 ## Evidence
 
-Redacted screenshots of a detected brute-force run and a detected
-role-change alert go in `evidence/`, following the same
-numbered-screenshot convention as Part 4.
+Redacted screenshots of a real detection run, including a deliberately triggered brute-force test against the Part 3 login client:
+
+1. [Detection run, seven findings](evidence/01-detect-anomalies-findings7-redacted.png)
+2. [Auth0 applications, including the M2M log reader](evidence/02-auth0-applications-list.png)
+3. [Detection run, six findings](evidence/03-detect-anomalies-findings6-redacted.png)
+4. [Login screen used for the brute-force test](evidence/04-login-screen-redacted.png)
+5. [`fetch_logs.py` source](evidence/05-fetch-logs-code.png)
+6. [`detect_anomalies.py` source](evidence/06-detect-anomalies-code.png)
+
+Email addresses and Auth0 user identifiers are redacted from all published evidence.
 
 ## Notes / next steps
 
