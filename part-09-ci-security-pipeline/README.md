@@ -35,9 +35,9 @@ No `.env` or Auth0 credentials are required for this test suite — it never cal
 
 ## Evidence
 
-A screenshot of the GitHub Actions run, showing both jobs passing on a real push, is in `evidence/`.
+Every run of the pipeline, with both jobs and their logs, is visible on the repository's [Actions page](https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab/actions/workflows/security-pipeline.yml).
 
-1. [CI pipeline passing — secret scan and permission tests](evidence/01-ci-pipeline-passing.png)
+[![Security Pipeline](https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab/actions/workflows/security-pipeline.yml/badge.svg)](https://github.com/AzaldoMAZ/Auth0-IAM-Security-Lab/actions/workflows/security-pipeline.yml)
 
 ## Security notice
 
